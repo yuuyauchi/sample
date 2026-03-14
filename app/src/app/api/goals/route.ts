@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
 
 // GET /api/goals - 目標一覧取得
 export async function GET(request: NextRequest) {
@@ -7,11 +8,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status") || "active";
 
-    // MVP: 最初のユーザーを使用
-    const user = await prisma.user.findFirst();
-    if (!user) {
-      return NextResponse.json({ items: [] });
-    }
+    const user = await getCurrentUser();
 
     const goals = await prisma.goal.findMany({
       where: {
@@ -57,13 +54,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // MVP: 最初のユーザーを使用
-    let user = await prisma.user.findFirst();
-    if (!user) {
-      user = await prisma.user.create({
-        data: { email: "me@example.com", name: "自分" },
-      });
-    }
+    const user = await getCurrentUser();
 
     const goal = await prisma.goal.create({
       data: {

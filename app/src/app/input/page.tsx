@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { PageContainer } from "@/components/layout/page-container";
+import { VoiceRecorder } from "@/components/voice/voice-recorder";
 
 export default function InputPage() {
   const router = useRouter();
@@ -99,9 +100,16 @@ export default function InputPage() {
         )}
 
         <div className="bg-white rounded-lg border p-4">
-          <label className="block text-sm font-medium text-gray-900 mb-2">
-            今日やったこと <span className="text-red-500">*</span>
-          </label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium text-gray-900">
+              今日やったこと <span className="text-red-500">*</span>
+            </label>
+            <VoiceRecorder
+              onTranscription={(text) =>
+                updateField("doneToday", form.doneToday ? form.doneToday + "\n" + text : text)
+              }
+            />
+          </div>
           <textarea
             placeholder="今日の業務内容を入力してください"
             value={form.doneToday}

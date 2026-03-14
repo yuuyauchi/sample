@@ -10,6 +10,7 @@ export function Header() {
     { href: "/", label: "ホーム" },
     { href: "/input", label: "入力" },
     { href: "/history", label: "履歴" },
+    { href: "/goals", label: "目標" },
   ];
 
   return (

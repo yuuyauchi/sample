@@ -1,0 +1,48 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: work_decision_agent
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/work_decision_agent
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  migrate:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+      target: builder
+    command: npx prisma db push --skip-generate
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/work_decision_agent
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

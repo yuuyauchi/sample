@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
 
 // GET /api/daily-inputs - 履歴一覧取得
 export async function GET(request: NextRequest) {
   try {
+    const user = await getCurrentUser();
     const { searchParams } = new URL(request.url);
     const year = searchParams.get("year")
       ? parseInt(searchParams.get("year")!)
@@ -20,6 +22,7 @@ export async function GET(request: NextRequest) {
     const [items, total] = await Promise.all([
       prisma.dailyInput.findMany({
         where: {
+          userId: user.id,
           targetDate: {
             gte: startDate,
             lte: endDate,
@@ -39,6 +42,7 @@ export async function GET(request: NextRequest) {
       }),
       prisma.dailyInput.count({
         where: {
+          userId: user.id,
           targetDate: {
             gte: startDate,
             lte: endDate,
@@ -94,16 +98,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // MVP: 最初のユーザーを取得（認証実装前の暫定処理）
-    let user = await prisma.user.findFirst();
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          email: "me@example.com",
-          name: "自分",
-        },
-      });
-    }
+    const user = await getCurrentUser();
 
     // 同日の入力が既に存在するか確認
     const existing = await prisma.dailyInput.findUnique({
