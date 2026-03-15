@@ -1,0 +1,8 @@
+.env
+.env.local
+.env.production
+.env.*.local
+app/.env
+app/.env.local
+app/.env.production
+app/.env.*.local

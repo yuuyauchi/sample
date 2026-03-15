@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { analyzeDaily } from "@/lib/ai/client";
 import { parseMainAnalysis } from "@/lib/ai/parser";
+import { generateTasksFromAnalysis, getExistingTasksForPrompt } from "@/lib/tasks/generate";
 
 // POST /api/daily-inputs/[id]/analyze - AI分析実行
 export async function POST(
@@ -25,29 +26,30 @@ export async function POST(
     }
 
     // 2. 入力内容のバリデーション
-    if (!dailyInput.doneToday.trim()) {
+    if (!dailyInput.content.trim()) {
       return NextResponse.json(
         {
           error: "validation_error",
-          message: "done_today is required for analysis",
+          message: "content is required for analysis",
         },
         { status: 422 }
       );
     }
 
-    // 3. AI分析実行
+    // 3. 既存タスクを取得してAIに渡す
+    const existingTasks = await getExistingTasksForPrompt();
+
+    // 4. AI分析実行
     const rawResult = await analyzeDaily({
-      doneToday: dailyInput.doneToday,
-      concerns: dailyInput.concerns,
-      planTomorrow: dailyInput.planTomorrow,
-      memo: dailyInput.memo,
+      content: dailyInput.content,
       targetDate: dailyInput.targetDate.toISOString().split("T")[0],
+      existingTasks: existingTasks.length > 0 ? existingTasks : undefined,
     });
 
-    // 4. バリデーション（Zodでパース）
+    // 5. バリデーション（Zodでパース）
     const validated = parseMainAnalysis(rawResult);
 
-    // 5. DB保存（upsert: 再分析に対応）
+    // 6. DB保存（upsert: 再分析に対応）
     const aiAnalysis = await prisma.aiAnalysis.upsert({
       where: { dailyInputId: id },
       create: {
@@ -60,7 +62,7 @@ export async function POST(
         consultationReason: validated.consultation.reason,
         nextActions: validated.nextActions as unknown as Prisma.InputJsonValue,
         rawResponse: rawResult as unknown as Prisma.InputJsonValue,
-        modelVersion: "claude-sonnet-4-6",
+        modelVersion: process.env.LLM_MODEL || "qwen2.5:7b",
       },
       update: {
         dailyReport: validated.dailyReport,
@@ -71,17 +73,25 @@ export async function POST(
         consultationReason: validated.consultation.reason,
         nextActions: validated.nextActions as unknown as Prisma.InputJsonValue,
         rawResponse: rawResult as unknown as Prisma.InputJsonValue,
-        modelVersion: "claude-sonnet-4-6",
+        modelVersion: process.env.LLM_MODEL || "qwen2.5:7b",
       },
     });
 
-    // 6. 入力ステータスを更新
+    // 7. 既存タスク更新 + 新規タスク生成
+    await generateTasksFromAnalysis(
+      aiAnalysis.id,
+      validated.priorities,
+      validated.nextActions,
+      validated.taskUpdates
+    );
+
+    // 8. 入力ステータスを更新
     await prisma.dailyInput.update({
       where: { id },
       data: { status: "analyzed" },
     });
 
-    // 7. レスポンス返却
+    // 9. レスポンス返却
     return NextResponse.json({
       analysisId: aiAnalysis.id,
       dailyInputId: id,

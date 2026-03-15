@@ -11,18 +11,9 @@ export default function InputPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [form, setForm] = useState({
-    doneToday: "",
-    concerns: "",
-    planTomorrow: "",
-    memo: "",
-  });
+  const [content, setContent] = useState("");
 
-  const updateField = (field: keyof typeof form, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const canSubmit = form.doneToday.trim().length > 0;
+  const canSubmit = content.trim().length > 0;
 
   const handleSaveDraft = async () => {
     setIsSaving(true);
@@ -33,7 +24,7 @@ export default function InputPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           targetDate: new Date().toISOString().split("T")[0],
-          ...form,
+          content,
           status: "draft",
         }),
       });
@@ -55,7 +46,7 @@ export default function InputPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           targetDate: new Date().toISOString().split("T")[0],
-          ...form,
+          content,
           status: "submitted",
         }),
       });
@@ -102,58 +93,19 @@ export default function InputPage() {
         <div className="bg-white rounded-lg border p-4">
           <div className="flex items-center justify-between mb-2">
             <label className="block text-sm font-medium text-gray-900">
-              今日やったこと <span className="text-red-500">*</span>
+              業務内容 <span className="text-red-500">*</span>
             </label>
             <VoiceRecorder
               onTranscription={(text) =>
-                updateField("doneToday", form.doneToday ? form.doneToday + "\n" + text : text)
+                setContent(content ? content + "\n" + text : text)
               }
             />
           </div>
           <textarea
-            placeholder="今日の業務内容を入力してください"
-            value={form.doneToday}
-            onChange={(e) => updateField("doneToday", e.target.value)}
-            rows={4}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-y"
-          />
-        </div>
-
-        <div className="bg-white rounded-lg border p-4">
-          <label className="block text-sm font-medium text-gray-900 mb-2">
-            困っていること・懸念
-          </label>
-          <textarea
-            placeholder="困っていることや心配事があれば入力してください"
-            value={form.concerns}
-            onChange={(e) => updateField("concerns", e.target.value)}
-            rows={3}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-y"
-          />
-        </div>
-
-        <div className="bg-white rounded-lg border p-4">
-          <label className="block text-sm font-medium text-gray-900 mb-2">
-            明日やりたいこと
-          </label>
-          <textarea
-            placeholder="明日取り組みたいことを入力してください"
-            value={form.planTomorrow}
-            onChange={(e) => updateField("planTomorrow", e.target.value)}
-            rows={3}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-y"
-          />
-        </div>
-
-        <div className="bg-white rounded-lg border p-4">
-          <label className="block text-sm font-medium text-gray-900 mb-2">
-            その他メモ（任意）
-          </label>
-          <textarea
-            placeholder="メモがあれば入力してください"
-            value={form.memo}
-            onChange={(e) => updateField("memo", e.target.value)}
-            rows={2}
+            placeholder="今日の業務内容、困っていること、明日の予定などを自由に入力してください"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            rows={8}
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-y"
           />
         </div>

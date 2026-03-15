@@ -16,7 +16,7 @@ export interface ApiError {
 export interface DailyInputListItem {
   id: string;
   targetDate: string;
-  doneTodaySummary: string;
+  contentSummary: string;
   status: InputStatus;
   hasRisks: boolean;
   consultationNeeded: boolean;

@@ -41,6 +41,12 @@ export interface AiAnalysis {
   createdAt: string;
 }
 
+export interface TaskUpdate {
+  taskId: string;
+  newStatus: "todo" | "in_progress" | "done";
+  reason?: string;
+}
+
 export interface MainAnalysisResponse {
   dailyReport: string;
   priorities: Priority[];
@@ -52,4 +58,5 @@ export interface MainAnalysisResponse {
     urgency: "today" | "tomorrow" | "this_week" | null;
   };
   nextActions: NextAction[];
+  taskUpdates?: TaskUpdate[];
 }

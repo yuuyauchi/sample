@@ -41,35 +41,11 @@ export default async function HistoryDetailPage({
           <h2 className="font-semibold text-gray-900 mb-3">入力内容</h2>
           <div className="space-y-3">
             <div>
-              <p className="text-xs text-gray-500 mb-1">今日やったこと</p>
+              <p className="text-xs text-gray-500 mb-1">入力内容</p>
               <p className="text-sm text-gray-800 whitespace-pre-wrap">
-                {dailyInput.doneToday}
+                {dailyInput.content}
               </p>
             </div>
-            {dailyInput.concerns && (
-              <div>
-                <p className="text-xs text-gray-500 mb-1">困っていること</p>
-                <p className="text-sm text-gray-800 whitespace-pre-wrap">
-                  {dailyInput.concerns}
-                </p>
-              </div>
-            )}
-            {dailyInput.planTomorrow && (
-              <div>
-                <p className="text-xs text-gray-500 mb-1">明日やりたいこと</p>
-                <p className="text-sm text-gray-800 whitespace-pre-wrap">
-                  {dailyInput.planTomorrow}
-                </p>
-              </div>
-            )}
-            {dailyInput.memo && (
-              <div>
-                <p className="text-xs text-gray-500 mb-1">メモ</p>
-                <p className="text-sm text-gray-800 whitespace-pre-wrap">
-                  {dailyInput.memo}
-                </p>
-              </div>
-            )}
           </div>
         </section>
 

@@ -41,10 +41,7 @@ model DailyInput {
   id            String      @id @default(uuid()) @db.Uuid
   userId        String      @map("user_id") @db.Uuid
   targetDate    DateTime    @map("target_date") @db.Date
-  doneToday     String      @map("done_today")
-  concerns      String      @default("")
-  planTomorrow  String      @default("") @map("plan_tomorrow")
-  memo          String      @default("")
+  content       String
   inputSource   InputSource @default(web) @map("input_source")
   status        InputStatus @default(draft)
   createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz
@@ -75,6 +72,7 @@ model AiAnalysis {
 
   dailyInput          DailyInput          @relation(fields: [dailyInputId], references: [id], onDelete: Cascade)
   consultationDrafts  ConsultationDraft[]
+  tasks               Task[]
 
   @@map("ai_analyses")
 }
@@ -103,8 +101,47 @@ model Goal {
   createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks Task[]
 
   @@index([userId, status])
   @@map("goals")
+}
+
+enum TaskStatus {
+  todo
+  in_progress
+  done
+}
+
+model Task {
+  id             String     @id @default(uuid()) @db.Uuid
+  aiAnalysisId   String     @map("ai_analysis_id") @db.Uuid
+  title          String     @db.VarChar(300)
+  description    String     @default("")
+  status         TaskStatus @default(todo)
+  priority       String     @default("medium") @db.VarChar(10)
+  sourceType     String     @map("source_type") @db.VarChar(20)
+  sourceIndex    Int        @default(0) @map("source_index")
+  dueDate            DateTime?  @map("due_date") @db.Date
+  startDate          DateTime?  @map("start_date") @db.Date
+  estimatedHours     Float?     @map("estimated_hours")
+  actualHours        Float?     @map("actual_hours")
+  acceptanceCriteria String     @default("") @map("acceptance_criteria")
+  risk               String     @default("")
+  tags               String[]   @default([])
+  blockerNote        String     @default("") @map("blocker_note")
+  completedAt        DateTime?  @map("completed_at") @db.Timestamptz
+  progressNotes      Json       @default("[]") @map("progress_notes")
+  goalId             String?    @map("goal_id") @db.Uuid
+  createdAt          DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  aiAnalysis AiAnalysis @relation(fields: [aiAnalysisId], references: [id], onDelete: Cascade)
+  goal       Goal?      @relation(fields: [goalId], references: [id], onDelete: SetNull)
+
+  @@index([aiAnalysisId])
+  @@index([status])
+  @@index([goalId])
+  @@map("tasks")
 }

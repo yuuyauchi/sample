@@ -1,7 +1,7 @@
 interface ConsultationPromptInput {
   analysisContext: string;
   risks: string;
-  concerns: string;
+  content: string;
   targetRole: string;
   tone: "formal" | "casual";
 }
@@ -36,8 +36,8 @@ ${input.analysisContext}
 ## リスク・懸念
 ${input.risks}
 
-## 困っていること
-${input.concerns}
+## 入力内容
+${input.content}
 
 ## 相談先
 ${input.targetRole}

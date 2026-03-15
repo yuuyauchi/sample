@@ -5,10 +5,7 @@ export interface DailyInput {
   id: string;
   userId: string;
   targetDate: string;
-  doneToday: string;
-  concerns: string;
-  planTomorrow: string;
-  memo: string;
+  content: string;
   inputSource: InputSource;
   status: InputStatus;
   createdAt: string;
@@ -21,18 +18,12 @@ export interface DailyInputWithAnalysis extends DailyInput {
 
 export interface CreateDailyInputRequest {
   targetDate: string;
-  doneToday: string;
-  concerns?: string;
-  planTomorrow?: string;
-  memo?: string;
+  content: string;
   status?: InputStatus;
 }
 
 export interface UpdateDailyInputRequest {
-  doneToday?: string;
-  concerns?: string;
-  planTomorrow?: string;
-  memo?: string;
+  content?: string;
   status?: InputStatus;
 }
 

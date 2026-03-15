@@ -54,10 +54,10 @@ export async function GET(request: NextRequest) {
     const responseItems = items.map((item) => ({
       id: item.id,
       targetDate: item.targetDate.toISOString().split("T")[0],
-      doneTodaySummary:
-        item.doneToday.length > 80
-          ? item.doneToday.substring(0, 80) + "..."
-          : item.doneToday,
+      contentSummary:
+        item.content.length > 80
+          ? item.content.substring(0, 80) + "..."
+          : item.content,
       status: item.status,
       hasRisks: item.aiAnalysis
         ? (item.aiAnalysis.risks as unknown as unknown[]).length > 0
@@ -85,14 +85,13 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { targetDate, doneToday, concerns, planTomorrow, memo, status } =
-      body;
+    const { targetDate, content, status } = body;
 
-    if (!targetDate || !doneToday?.trim()) {
+    if (!targetDate || !content?.trim()) {
       return NextResponse.json(
         {
           error: "validation_error",
-          message: "targetDate and doneToday are required",
+          message: "targetDate and content are required",
         },
         { status: 400 }
       );
@@ -115,10 +114,7 @@ export async function POST(request: NextRequest) {
       const updated = await prisma.dailyInput.update({
         where: { id: existing.id },
         data: {
-          doneToday,
-          concerns: concerns ?? "",
-          planTomorrow: planTomorrow ?? "",
-          memo: memo ?? "",
+          content,
           status: status ?? "submitted",
         },
       });
@@ -126,10 +122,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         id: updated.id,
         targetDate: updated.targetDate.toISOString().split("T")[0],
-        doneToday: updated.doneToday,
-        concerns: updated.concerns,
-        planTomorrow: updated.planTomorrow,
-        memo: updated.memo,
+        content: updated.content,
         inputSource: updated.inputSource,
         status: updated.status,
         createdAt: updated.createdAt.toISOString(),
@@ -140,10 +133,7 @@ export async function POST(request: NextRequest) {
       data: {
         userId: user.id,
         targetDate: new Date(targetDate),
-        doneToday,
-        concerns: concerns ?? "",
-        planTomorrow: planTomorrow ?? "",
-        memo: memo ?? "",
+        content,
         inputSource: "web",
         status: status ?? "submitted",
       },
@@ -153,10 +143,7 @@ export async function POST(request: NextRequest) {
       {
         id: dailyInput.id,
         targetDate: dailyInput.targetDate.toISOString().split("T")[0],
-        doneToday: dailyInput.doneToday,
-        concerns: dailyInput.concerns,
-        planTomorrow: dailyInput.planTomorrow,
-        memo: dailyInput.memo,
+        content: dailyInput.content,
         inputSource: dailyInput.inputSource,
         status: dailyInput.status,
         createdAt: dailyInput.createdAt.toISOString(),

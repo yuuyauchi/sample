@@ -42,7 +42,7 @@ export async function POST(
     const rawResult = await generateConsultationDraft({
       analysisContext: analysis.dailyReport,
       risks: JSON.stringify(analysis.risks),
-      concerns: analysis.dailyInput.concerns,
+      content: analysis.dailyInput.content,
       targetRole,
       tone,
     });

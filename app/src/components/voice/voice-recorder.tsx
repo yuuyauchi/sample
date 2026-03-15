@@ -6,20 +6,47 @@ interface VoiceRecorderProps {
   onTranscription: (text: string) => void;
 }
 
+const SUPPORTED_MIME_TYPES = [
+  "audio/webm",
+  "audio/mp4",
+  "audio/ogg",
+  "audio/wav",
+] as const;
+
+function getSupportedMimeType(): string | undefined {
+  return SUPPORTED_MIME_TYPES.find((type) => MediaRecorder.isTypeSupported(type));
+}
+
+function getExtension(mimeType: string): string {
+  const map: Record<string, string> = {
+    "audio/webm": "webm",
+    "audio/mp4": "m4a",
+    "audio/ogg": "ogg",
+    "audio/wav": "wav",
+  };
+  return map[mimeType] ?? "webm";
+}
+
 export function VoiceRecorder({ onTranscription }: VoiceRecorderProps) {
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const mimeTypeRef = useRef<string>("audio/webm");
 
   const startRecording = async () => {
     setError(null);
     try {
+      const mimeType = getSupportedMimeType();
+      if (!mimeType) {
+        setError("このブラウザは音声録音に対応していません");
+        return;
+      }
+      mimeTypeRef.current = mimeType;
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: "audio/webm",
-      });
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
 
@@ -31,7 +58,7 @@ export function VoiceRecorder({ onTranscription }: VoiceRecorderProps) {
 
       mediaRecorder.onstop = async () => {
         stream.getTracks().forEach((track) => track.stop());
-        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        const blob = new Blob(chunksRef.current, { type: mimeTypeRef.current });
         await transcribe(blob);
       };
 
@@ -53,19 +80,21 @@ export function VoiceRecorder({ onTranscription }: VoiceRecorderProps) {
     setTranscribing(true);
     setError(null);
     try {
+      const ext = getExtension(mimeTypeRef.current);
       const formData = new FormData();
-      formData.append("audio", blob, "recording.webm");
+      formData.append("audio", blob, `recording.${ext}`);
 
       const res = await fetch("/api/voice/transcribe", {
         method: "POST",
         body: formData,
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        throw new Error("文字起こしに失敗しました");
+        throw new Error(data.message ?? "文字起こしに失敗しました");
       }
 
-      const data = await res.json();
       onTranscription(data.text);
     } catch (err) {
       setError(err instanceof Error ? err.message : "エラーが発生しました");

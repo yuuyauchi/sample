@@ -9,6 +9,7 @@ export function Header() {
   const navItems = [
     { href: "/", label: "ホーム" },
     { href: "/input", label: "入力" },
+    { href: "/tasks", label: "タスク" },
     { href: "/history", label: "履歴" },
     { href: "/goals", label: "目標" },
   ];

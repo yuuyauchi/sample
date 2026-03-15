@@ -29,10 +29,7 @@ export async function GET(
     return NextResponse.json({
       id: dailyInput.id,
       targetDate: dailyInput.targetDate.toISOString().split("T")[0],
-      doneToday: dailyInput.doneToday,
-      concerns: dailyInput.concerns,
-      planTomorrow: dailyInput.planTomorrow,
-      memo: dailyInput.memo,
+      content: dailyInput.content,
       inputSource: dailyInput.inputSource,
       status: dailyInput.status,
       createdAt: dailyInput.createdAt.toISOString(),
@@ -78,7 +75,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { doneToday, concerns, planTomorrow, memo, status } = body;
+    const { content, status } = body;
 
     const existing = await prisma.dailyInput.findUnique({ where: { id } });
     if (!existing) {
@@ -91,10 +88,7 @@ export async function PUT(
     const updated = await prisma.dailyInput.update({
       where: { id },
       data: {
-        ...(doneToday !== undefined && { doneToday }),
-        ...(concerns !== undefined && { concerns }),
-        ...(planTomorrow !== undefined && { planTomorrow }),
-        ...(memo !== undefined && { memo }),
+        ...(content !== undefined && { content }),
         ...(status !== undefined && { status }),
       },
     });
@@ -102,10 +96,7 @@ export async function PUT(
     return NextResponse.json({
       id: updated.id,
       targetDate: updated.targetDate.toISOString().split("T")[0],
-      doneToday: updated.doneToday,
-      concerns: updated.concerns,
-      planTomorrow: updated.planTomorrow,
-      memo: updated.memo,
+      content: updated.content,
       inputSource: updated.inputSource,
       status: updated.status,
       createdAt: updated.createdAt.toISOString(),

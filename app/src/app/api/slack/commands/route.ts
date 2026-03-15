@@ -65,12 +65,12 @@ async function handleDailyInput(text: string) {
     create: {
       userId: user.id,
       targetDate: new Date(today),
-      doneToday: text,
+      content: text,
       inputSource: "slack",
       status: "submitted",
     },
     update: {
-      doneToday: text,
+      content: text,
       inputSource: "slack",
       status: "submitted",
     },
@@ -79,10 +79,7 @@ async function handleDailyInput(text: string) {
   // Run AI analysis
   try {
     const rawResult = await analyzeDaily({
-      doneToday: dailyInput.doneToday,
-      concerns: dailyInput.concerns,
-      planTomorrow: dailyInput.planTomorrow,
-      memo: dailyInput.memo,
+      content: dailyInput.content,
       targetDate: today,
     });
 
@@ -100,7 +97,7 @@ async function handleDailyInput(text: string) {
         consultationReason: validated.consultation.reason,
         nextActions: validated.nextActions as unknown as Prisma.InputJsonValue,
         rawResponse: rawResult as unknown as Prisma.InputJsonValue,
-        modelVersion: "claude-sonnet-4-6",
+        modelVersion: process.env.LLM_MODEL || "qwen2.5:7b",
       },
       update: {
         dailyReport: validated.dailyReport,
@@ -111,7 +108,7 @@ async function handleDailyInput(text: string) {
         consultationReason: validated.consultation.reason,
         nextActions: validated.nextActions as unknown as Prisma.InputJsonValue,
         rawResponse: rawResult as unknown as Prisma.InputJsonValue,
-        modelVersion: "claude-sonnet-4-6",
+        modelVersion: process.env.LLM_MODEL || "qwen2.5:7b",
       },
     });
 

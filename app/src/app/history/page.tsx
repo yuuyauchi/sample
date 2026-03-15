@@ -124,7 +124,7 @@ export default function HistoryPage() {
                 </div>
               </div>
               <p className="text-sm text-gray-600 truncate">
-                {item.doneTodaySummary}
+                {item.contentSummary}
               </p>
             </Link>
           ))}
