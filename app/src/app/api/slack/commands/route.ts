@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { analyzeDaily } from "@/lib/ai/client";
 import { parseMainAnalysis } from "@/lib/ai/parser";
-import type { Prisma } from "@prisma/client";
 
 // POST /api/slack/commands - Slack slash command handler
 export async function POST(request: NextRequest) {
@@ -93,24 +92,24 @@ async function handleDailyInput(text: string) {
       create: {
         dailyInputId: dailyInput.id,
         dailyReport: validated.dailyReport,
-        priorities: validated.priorities as unknown as Prisma.InputJsonValue,
-        risks: validated.risks as unknown as Prisma.InputJsonValue,
+        priorities: JSON.stringify(validated.priorities),
+        risks: JSON.stringify(validated.risks),
         consultationNeeded: validated.consultation.needed,
         consultationTarget: validated.consultation.target,
         consultationReason: validated.consultation.reason,
-        nextActions: validated.nextActions as unknown as Prisma.InputJsonValue,
-        rawResponse: rawResult as unknown as Prisma.InputJsonValue,
+        nextActions: JSON.stringify(validated.nextActions),
+        rawResponse: JSON.stringify(rawResult),
         modelVersion: "claude-sonnet-4-6",
       },
       update: {
         dailyReport: validated.dailyReport,
-        priorities: validated.priorities as unknown as Prisma.InputJsonValue,
-        risks: validated.risks as unknown as Prisma.InputJsonValue,
+        priorities: JSON.stringify(validated.priorities),
+        risks: JSON.stringify(validated.risks),
         consultationNeeded: validated.consultation.needed,
         consultationTarget: validated.consultation.target,
         consultationReason: validated.consultation.reason,
-        nextActions: validated.nextActions as unknown as Prisma.InputJsonValue,
-        rawResponse: rawResult as unknown as Prisma.InputJsonValue,
+        nextActions: JSON.stringify(validated.nextActions),
+        rawResponse: JSON.stringify(rawResult),
         modelVersion: "claude-sonnet-4-6",
       },
     });

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { analyzeDaily } from "@/lib/ai/client";
 import { parseMainAnalysis } from "@/lib/ai/parser";
@@ -35,63 +34,101 @@ export async function POST(
       );
     }
 
-    // 3. AI分析実行
+    // 3. アクティブな目標を取得
+    const activeGoals = await prisma.goal.findMany({
+      where: {
+        userId: dailyInput.userId,
+        status: "active",
+      },
+      select: { id: true, title: true, description: true, periodEnd: true },
+    });
+
+    // 4. AI分析実行（目標情報を含む）
     const rawResult = await analyzeDaily({
       doneToday: dailyInput.doneToday,
       concerns: dailyInput.concerns,
       planTomorrow: dailyInput.planTomorrow,
       memo: dailyInput.memo,
       targetDate: dailyInput.targetDate.toISOString().split("T")[0],
+      activeGoals: activeGoals.map((g) => ({
+        id: g.id,
+        title: g.title,
+        description: g.description,
+        periodEnd: g.periodEnd.toISOString().split("T")[0],
+      })),
     });
 
-    // 4. バリデーション（Zodでパース）
+    // 5. バリデーション（Zodでパース）
     const validated = parseMainAnalysis(rawResult);
 
-    // 5. DB保存（upsert: 再分析に対応）
+    // 6. DB保存（upsert: 再分析に対応）
     const aiAnalysis = await prisma.aiAnalysis.upsert({
       where: { dailyInputId: id },
       create: {
         dailyInputId: id,
         dailyReport: validated.dailyReport,
-        priorities: validated.priorities as unknown as Prisma.InputJsonValue,
-        risks: validated.risks as unknown as Prisma.InputJsonValue,
+        priorities: JSON.stringify(validated.priorities),
+        risks: JSON.stringify(validated.risks),
         consultationNeeded: validated.consultation.needed,
         consultationTarget: validated.consultation.target,
         consultationReason: validated.consultation.reason,
-        nextActions: validated.nextActions as unknown as Prisma.InputJsonValue,
-        rawResponse: rawResult as unknown as Prisma.InputJsonValue,
+        nextActions: JSON.stringify(validated.nextActions),
+        rawResponse: JSON.stringify(rawResult),
         modelVersion: "claude-sonnet-4-6",
       },
       update: {
         dailyReport: validated.dailyReport,
-        priorities: validated.priorities as unknown as Prisma.InputJsonValue,
-        risks: validated.risks as unknown as Prisma.InputJsonValue,
+        priorities: JSON.stringify(validated.priorities),
+        risks: JSON.stringify(validated.risks),
         consultationNeeded: validated.consultation.needed,
         consultationTarget: validated.consultation.target,
         consultationReason: validated.consultation.reason,
-        nextActions: validated.nextActions as unknown as Prisma.InputJsonValue,
-        rawResponse: rawResult as unknown as Prisma.InputJsonValue,
+        nextActions: JSON.stringify(validated.nextActions),
+        rawResponse: JSON.stringify(rawResult),
         modelVersion: "claude-sonnet-4-6",
       },
     });
 
-    // 6. 入力ステータスを更新
+    // 7. GoalContribution保存（既存を削除してから再作成）
+    if (validated.goalContributions && validated.goalContributions.length > 0) {
+      await prisma.goalContribution.deleteMany({
+        where: { aiAnalysisId: aiAnalysis.id },
+      });
+
+      const validGoalIds = new Set(activeGoals.map((g) => g.id));
+      const validContributions = validated.goalContributions.filter((gc) =>
+        validGoalIds.has(gc.goalId)
+      );
+
+      if (validContributions.length > 0) {
+        await prisma.goalContribution.createMany({
+          data: validContributions.map((gc) => ({
+            goalId: gc.goalId,
+            aiAnalysisId: aiAnalysis.id,
+            contributionNote: gc.contributionNote,
+            alignmentScore: gc.alignmentScore,
+          })),
+        });
+      }
+    }
+
+    // 8. 入力ステータスを更新
     await prisma.dailyInput.update({
       where: { id },
       data: { status: "analyzed" },
     });
 
-    // 7. レスポンス返却
+    // 9. レスポンス返却
     return NextResponse.json({
       analysisId: aiAnalysis.id,
       dailyInputId: id,
       dailyReport: aiAnalysis.dailyReport,
-      priorities: aiAnalysis.priorities,
-      risks: aiAnalysis.risks,
+      priorities: JSON.parse(aiAnalysis.priorities),
+      risks: JSON.parse(aiAnalysis.risks),
       consultationNeeded: aiAnalysis.consultationNeeded,
       consultationTarget: aiAnalysis.consultationTarget,
       consultationReason: aiAnalysis.consultationReason,
-      nextActions: aiAnalysis.nextActions,
+      nextActions: JSON.parse(aiAnalysis.nextActions),
       createdAt: aiAnalysis.createdAt.toISOString(),
     });
   } catch (error) {

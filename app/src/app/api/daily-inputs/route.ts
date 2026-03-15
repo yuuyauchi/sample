@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
           : item.doneToday,
       status: item.status,
       hasRisks: item.aiAnalysis
-        ? (item.aiAnalysis.risks as unknown as unknown[]).length > 0
+        ? (JSON.parse(item.aiAnalysis.risks) as unknown[]).length > 0
         : false,
       consultationNeeded: item.aiAnalysis?.consultationNeeded ?? false,
       createdAt: item.createdAt.toISOString(),

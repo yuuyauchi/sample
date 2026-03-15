@@ -1,14 +1,42 @@
+interface ActiveGoal {
+  id: string;
+  title: string;
+  description: string;
+  periodEnd: string;
+}
+
 interface PromptInput {
   doneToday: string;
   concerns: string;
   planTomorrow: string;
   memo: string;
   targetDate: string;
+  activeGoals?: ActiveGoal[];
 }
 
 export function buildMainAnalysisPrompt(input: PromptInput) {
+  const hasGoals = input.activeGoals && input.activeGoals.length > 0;
+
+  const goalSection = hasGoals
+    ? `
+6. **目標との関連性**: 以下のユーザーの目標に対して、本日の業務がどの程度貢献しているかを分析。
+   各目標について、関連する業務があれば goalId, alignmentScore (0-100), contributionNote を出力。
+   関連がない目標は含めない。関連がゼロの場合は空配列。`
+    : "";
+
+  const goalJsonSection = hasGoals
+    ? `,
+  "goalContributions": [
+    {
+      "goalId": "目標のID",
+      "alignmentScore": 85,
+      "contributionNote": "この業務がどのように目標に貢献しているかの説明"
+    }
+  ]`
+    : "";
+
   const systemPrompt = `あなたは業務意思決定支援AIエージェントです。
-ユーザーの日次業務報告を分析し、以下の5つの出力を生成してください。
+ユーザーの日次業務報告を分析し、以下の${hasGoals ? "6" : "5"}つの出力を生成してください。
 
 ## 出力ルール
 1. **日報生成**: ビジネス文書として整形された日報。「実施事項」「課題・懸念」「明日の予定」のセクションに整理。
@@ -32,7 +60,7 @@ export function buildMainAnalysisPrompt(input: PromptInput) {
    - 技術的に解決策が見えない
    - 仕様の解釈に曖昧さがある
    該当しない場合は needed: false とし、target/reason/urgency は null にする。
-5. **次アクション提案**: 必ず3つ。具体的で明日実行可能。少なくとも1つはリスク対応（リスクがなければ予防的アクション）、1つは通常業務推進。
+5. **次アクション提案**: 必ず3つ。具体的で明日実行可能。少なくとも1つはリスク対応（リスクがなければ予防的アクション）、1つは通常業務推進。${goalSection}
 
 ## 出力形式
 必ず以下のJSON形式のみで出力してください。JSON以外のテキストは含めないでください。
@@ -77,9 +105,16 @@ export function buildMainAnalysisPrompt(input: PromptInput) {
       "category": "technical",
       "priority": "high"
     }
-  ]
+  ]${goalJsonSection}
 }
 \`\`\``;
+
+  const goalsUserSection = hasGoals
+    ? `
+
+## 現在の目標
+${input.activeGoals!.map((g) => `- [${g.id}] ${g.title}: ${g.description || "説明なし"} (期限: ${g.periodEnd})`).join("\n")}`
+    : "";
 
   const userPrompt = `# ${input.targetDate} の業務報告
 
@@ -93,7 +128,7 @@ ${input.concerns || "特になし"}
 ${input.planTomorrow || "未定"}
 
 ## その他メモ
-${input.memo || "なし"}
+${input.memo || "なし"}${goalsUserSection}
 
 上記の内容を分析し、JSON形式で出力してください。`;
 

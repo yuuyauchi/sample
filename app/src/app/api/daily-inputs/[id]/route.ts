@@ -41,12 +41,12 @@ export async function GET(
         ? {
             id: dailyInput.aiAnalysis.id,
             dailyReport: dailyInput.aiAnalysis.dailyReport,
-            priorities: dailyInput.aiAnalysis.priorities,
-            risks: dailyInput.aiAnalysis.risks,
+            priorities: JSON.parse(dailyInput.aiAnalysis.priorities),
+            risks: JSON.parse(dailyInput.aiAnalysis.risks),
             consultationNeeded: dailyInput.aiAnalysis.consultationNeeded,
             consultationTarget: dailyInput.aiAnalysis.consultationTarget,
             consultationReason: dailyInput.aiAnalysis.consultationReason,
-            nextActions: dailyInput.aiAnalysis.nextActions,
+            nextActions: JSON.parse(dailyInput.aiAnalysis.nextActions),
             modelVersion: dailyInput.aiAnalysis.modelVersion,
             createdAt: dailyInput.aiAnalysis.createdAt.toISOString(),
             consultationDrafts: dailyInput.aiAnalysis.consultationDrafts.map(

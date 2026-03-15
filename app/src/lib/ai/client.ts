@@ -13,6 +13,7 @@ export interface DailyInputForAnalysis {
   planTomorrow: string;
   memo: string;
   targetDate: string;
+  activeGoals?: Array<{ id: string; title: string; description: string; periodEnd: string }>;
 }
 
 export async function analyzeDaily(

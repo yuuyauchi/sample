@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -14,6 +14,21 @@ export default function LoginPage() {
   const [message, setMessage] = useState<string | null>(null);
 
   const supabase = createSupabaseBrowserClient();
+
+  useEffect(() => {
+    // Supabase未設定の場合はホームにリダイレクト（MVPモード）
+    if (!supabase) {
+      router.replace("/");
+    }
+  }, [supabase, router]);
+
+  if (!supabase) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <p className="text-gray-400">リダイレクト中...</p>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

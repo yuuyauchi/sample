@@ -42,12 +42,19 @@ const consultationSchema = z.object({
   urgency: z.enum(["today", "tomorrow", "this_week"]).nullable(),
 });
 
+const goalContributionSchema = z.object({
+  goalId: z.string(),
+  alignmentScore: z.number().min(0).max(100),
+  contributionNote: z.string().min(1),
+});
+
 export const mainAnalysisSchema = z.object({
   dailyReport: z.string().min(1),
   priorities: z.array(prioritySchema).min(1),
   risks: z.array(riskSchema),
   consultation: consultationSchema,
   nextActions: z.array(nextActionSchema).min(1).max(5),
+  goalContributions: z.array(goalContributionSchema).optional().default([]),
 });
 
 export const consultationDraftSchema = z.object({

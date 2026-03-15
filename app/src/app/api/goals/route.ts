@@ -15,6 +15,13 @@ export async function GET(request: NextRequest) {
         userId: user.id,
         ...(status !== "all" && { status: status as "active" | "completed" | "cancelled" }),
       },
+      include: {
+        contributions: {
+          select: { alignmentScore: true },
+          orderBy: { createdAt: "desc" },
+          take: 30,
+        },
+      },
       orderBy: { periodEnd: "asc" },
     });
 
@@ -27,6 +34,10 @@ export async function GET(request: NextRequest) {
         periodEnd: g.periodEnd.toISOString().split("T")[0],
         status: g.status,
         createdAt: g.createdAt.toISOString(),
+        contributionCount: g.contributions.length,
+        avgAlignment: g.contributions.length > 0
+          ? Math.round(g.contributions.reduce((sum, c) => sum + c.alignmentScore, 0) / g.contributions.length)
+          : null,
       })),
     });
   } catch (error) {
