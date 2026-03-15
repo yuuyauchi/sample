@@ -11,6 +11,7 @@ export function Header() {
     { href: "/input", label: "入力" },
     { href: "/history", label: "履歴" },
     { href: "/goals", label: "目標" },
+    { href: "/analytics", label: "分析" },
   ];
 
   return (

@@ -19,6 +19,9 @@ export default async function HistoryDetailPage({
             orderBy: { createdAt: "desc" },
             take: 1,
           },
+          goalContributions: {
+            include: { goal: { select: { title: true } } },
+          },
         },
       },
     },
@@ -78,34 +81,17 @@ export default async function HistoryDetailPage({
           <AnalysisView
             analysisId={dailyInput.aiAnalysis.id}
             dailyReport={dailyInput.aiAnalysis.dailyReport}
-            priorities={
-              dailyInput.aiAnalysis.priorities as unknown as Array<{
-                rank: number;
-                task: string;
-                score: number;
-                urgency: string;
-                reason: string;
-              }>
-            }
-            risks={
-              dailyInput.aiAnalysis.risks as unknown as Array<{
-                description: string;
-                severity: string;
-                impact: string;
-                daysUntilImpact: number | null;
-                suggestedMitigation: string;
-              }>
-            }
+            priorities={JSON.parse(dailyInput.aiAnalysis.priorities)}
+            risks={JSON.parse(dailyInput.aiAnalysis.risks)}
             consultationNeeded={dailyInput.aiAnalysis.consultationNeeded}
             consultationTarget={dailyInput.aiAnalysis.consultationTarget}
             consultationReason={dailyInput.aiAnalysis.consultationReason}
-            nextActions={
-              dailyInput.aiAnalysis.nextActions as unknown as Array<{
-                action: string;
-                category: string;
-                priority: string;
-              }>
-            }
+            nextActions={JSON.parse(dailyInput.aiAnalysis.nextActions)}
+            goalContributions={dailyInput.aiAnalysis.goalContributions.map((gc) => ({
+              goalTitle: gc.goal.title,
+              alignmentScore: gc.alignmentScore,
+              contributionNote: gc.contributionNote,
+            }))}
             existingDraft={
               dailyInput.aiAnalysis.consultationDrafts[0]
                 ? {

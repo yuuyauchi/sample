@@ -25,6 +25,12 @@ interface NextAction {
   priority: string;
 }
 
+interface GoalContributionData {
+  goalTitle: string;
+  alignmentScore: number;
+  contributionNote: string;
+}
+
 interface ConsultationDraftData {
   id: string;
   targetRole: string;
@@ -42,6 +48,7 @@ interface AnalysisViewProps {
   consultationReason: string | null;
   nextActions: NextAction[];
   existingDraft: ConsultationDraftData | null;
+  goalContributions?: GoalContributionData[];
 }
 
 const urgencyColors: Record<string, string> = {
@@ -66,6 +73,7 @@ export function AnalysisView({
   consultationReason,
   nextActions,
   existingDraft,
+  goalContributions,
 }: AnalysisViewProps) {
   const [draft, setDraft] = useState<ConsultationDraftData | null>(existingDraft);
   const [generatingDraft, setGeneratingDraft] = useState(false);
@@ -107,6 +115,48 @@ export function AnalysisView({
           {dailyReport}
         </div>
       </section>
+
+      {/* 目標との関連 */}
+      {goalContributions && goalContributions.length > 0 && (
+        <section className="bg-white rounded-lg border border-blue-200 p-5">
+          <h2 className="font-semibold text-blue-700 mb-3">目標との関連</h2>
+          <div className="space-y-3">
+            {goalContributions.map((gc, i) => (
+              <div key={i} className="border-l-2 border-blue-300 pl-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm font-medium text-gray-900">
+                    {gc.goalTitle}
+                  </span>
+                  <span
+                    className={`px-1.5 py-0.5 text-[10px] font-medium rounded ${
+                      gc.alignmentScore >= 70
+                        ? "bg-green-100 text-green-700"
+                        : gc.alignmentScore >= 40
+                        ? "bg-yellow-100 text-yellow-700"
+                        : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
+                    {gc.alignmentScore}点
+                  </span>
+                </div>
+                <div className="w-full bg-gray-100 rounded-full h-1.5 mb-1.5">
+                  <div
+                    className={`h-1.5 rounded-full ${
+                      gc.alignmentScore >= 70
+                        ? "bg-green-500"
+                        : gc.alignmentScore >= 40
+                        ? "bg-yellow-500"
+                        : "bg-gray-400"
+                    }`}
+                    style={{ width: `${gc.alignmentScore}%` }}
+                  />
+                </div>
+                <p className="text-xs text-gray-600">{gc.contributionNote}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* 優先順位 */}
       <section className="bg-white rounded-lg border p-5">

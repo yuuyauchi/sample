@@ -1,0 +1,25 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# SQLite
+*.db
+*.db-journal
+
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Docker
+postgres_data/
+
+# OS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/

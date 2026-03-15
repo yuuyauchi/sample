@@ -18,6 +18,9 @@ export default async function AnalysisPage({
         orderBy: { createdAt: "desc" },
         take: 1,
       },
+      goalContributions: {
+        include: { goal: { select: { title: true } } },
+      },
     },
   });
 
@@ -43,35 +46,18 @@ export default async function AnalysisPage({
       <AnalysisView
         analysisId={analysis.id}
         dailyReport={analysis.dailyReport}
-        priorities={
-          analysis.priorities as unknown as Array<{
-            rank: number;
-            task: string;
-            score: number;
-            urgency: string;
-            reason: string;
-          }>
-        }
-        risks={
-          analysis.risks as unknown as Array<{
-            description: string;
-            severity: string;
-            impact: string;
-            daysUntilImpact: number | null;
-            suggestedMitigation: string;
-          }>
-        }
+        priorities={JSON.parse(analysis.priorities)}
+        risks={JSON.parse(analysis.risks)}
         consultationNeeded={analysis.consultationNeeded}
         consultationTarget={analysis.consultationTarget}
         consultationReason={analysis.consultationReason}
-        nextActions={
-          analysis.nextActions as unknown as Array<{
-            action: string;
-            category: string;
-            priority: string;
-          }>
-        }
+        nextActions={JSON.parse(analysis.nextActions)}
         existingDraft={existingDraft}
+        goalContributions={analysis.goalContributions.map((gc) => ({
+          goalTitle: gc.goal.title,
+          alignmentScore: gc.alignmentScore,
+          contributionNote: gc.contributionNote,
+        }))}
       />
     </PageContainer>
   );

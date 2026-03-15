@@ -41,6 +41,12 @@ export interface AiAnalysis {
   createdAt: string;
 }
 
+export interface GoalContribution {
+  goalId: string;
+  alignmentScore: number;
+  contributionNote: string;
+}
+
 export interface MainAnalysisResponse {
   dailyReport: string;
   priorities: Priority[];
@@ -52,4 +58,5 @@ export interface MainAnalysisResponse {
     urgency: "today" | "tomorrow" | "this_week" | null;
   };
   nextActions: NextAction[];
+  goalContributions?: GoalContribution[];
 }

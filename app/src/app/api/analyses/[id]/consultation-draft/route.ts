@@ -41,7 +41,7 @@ export async function POST(
     // 2. 相談文生成
     const rawResult = await generateConsultationDraft({
       analysisContext: analysis.dailyReport,
-      risks: JSON.stringify(analysis.risks),
+      risks: analysis.risks,
       concerns: analysis.dailyInput.concerns,
       targetRole,
       tone,

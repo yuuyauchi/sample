@@ -11,6 +11,8 @@ interface Goal {
   periodEnd: string;
   status: "active" | "completed" | "cancelled";
   createdAt: string;
+  contributionCount?: number;
+  avgAlignment?: number | null;
 }
 
 export default function GoalsPage() {
@@ -271,6 +273,27 @@ export default function GoalsPage() {
                   <p className="text-xs text-gray-400">
                     {goal.periodStart} 〜 {goal.periodEnd}
                   </p>
+                  {goal.contributionCount != null && goal.contributionCount > 0 && (
+                    <div className="mt-1.5">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-[10px] text-gray-400">
+                          貢献: {goal.contributionCount}回 / 平均{goal.avgAlignment}点
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-100 rounded-full h-1">
+                        <div
+                          className={`h-1 rounded-full ${
+                            (goal.avgAlignment || 0) >= 70
+                              ? "bg-green-500"
+                              : (goal.avgAlignment || 0) >= 40
+                              ? "bg-yellow-500"
+                              : "bg-gray-400"
+                          }`}
+                          style={{ width: `${goal.avgAlignment || 0}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="flex gap-2 mt-2">
